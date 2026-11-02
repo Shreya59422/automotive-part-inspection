@@ -1,0 +1,779 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Automotive 3D Bracket Inspection</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #10131b;
+    color: #f1f5f9;
+    font-family: Arial, sans-serif;
+}
+
+#stage {
+    width: 100%;
+    height: 550px;
+    position: relative;
+    overflow: hidden;
+    background: #10131b;
+}
+
+#stage canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#info {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 5;
+    padding: 11px 14px;
+    min-width: 210px;
+    background: rgba(20,25,36,.94);
+    border: 1px solid #394354;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.8;
+    pointer-events: none;
+}
+
+#info strong {
+    color: #8bc9ff;
+    font-size: 14px;
+}
+
+#help {
+    position: absolute;
+    bottom: 10px;
+    left: 12px;
+    z-index: 5;
+    padding: 8px 11px;
+    background: rgba(20,25,36,.92);
+    border: 1px solid #394354;
+    border-radius: 7px;
+    color: #cbd5e1;
+    font-size: 11px;
+    pointer-events: none;
+}
+
+#legend {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 5;
+    padding: 10px 12px;
+    background: rgba(20,25,36,.94);
+    border: 1px solid #394354;
+    border-radius: 8px;
+    font-size: 11px;
+    line-height: 2;
+    pointer-events: none;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+}
+
+#error {
+    display: none;
+    position: absolute;
+    inset: 80px 12px 50px;
+    z-index: 10;
+    overflow: auto;
+    padding: 15px;
+    color: #ffb4b4;
+    background: #321d25;
+    border: 1px solid #a44b5c;
+    border-radius: 8px;
+    font-size: 13px;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 550px) {
+    #stage {
+        height: 550px;
+    }
+
+    #legend {
+        top: 130px;
+        left: 12px;
+        right: auto;
+    }
+}
+</style>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    }
+}
+</script>
+
+</head>
+
+<body>
+
+<div id="stage">
+
+    <div id="info">
+        <strong>Automotive Mounting Bracket</strong>
+        <div id="selected">Selected: None</div>
+        <div id="status">Status: Select a marker</div>
+        <div id="summary">Verified: 0 / 4</div>
+    </div>
+
+    <div id="legend">
+
+        <div class="legend-item">
+            <span class="dot" style="background:#38bdf8"></span>
+            Not verified
+        </div>
+
+        <div class="legend-item">
+            <span class="dot" style="background:#22c55e"></span>
+            Present
+        </div>
+
+        <div class="legend-item">
+            <span class="dot" style="background:#ef4444"></span>
+            Missing
+        </div>
+
+        <div class="legend-item">
+            <span class="dot" style="background:#f59e0b"></span>
+            Needs Review
+        </div>
+
+    </div>
+
+    <div id="help">
+        Drag: Rotate | Scroll: Zoom | Click: Inspect marker
+    </div>
+
+    <div id="error"></div>
+
+</div>
+
+<script type="module">
+
+import * as THREE from 'three';
+
+import { OrbitControls } from
+'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+
+// ==========================================
+// 1. INITIAL STATUS DATA FROM STREAMLIT
+// ==========================================
+
+const positionStatuses = __POSITION_STATUSES__;
+
+const positions = ['P1', 'P2', 'P3', 'P4'];
+
+const colors = {
+    'Not verified': 0x38bdf8,
+    'Present': 0x22c55e,
+    'Missing': 0xef4444,
+    'Needs Review': 0xf59e0b
+};
+
+const stage = document.getElementById('stage');
+
+const selectedText = document.getElementById('selected');
+const statusText = document.getElementById('status');
+const summaryText = document.getElementById('summary');
+const errorBox = document.getElementById('error');
+
+let selectedMarker = null;
+
+const markerMeshes = [];
+
+try {
+
+    // ==========================================
+    // 2. SCENE
+    // ==========================================
+
+    const scene = new THREE.Scene();
+
+    scene.background = new THREE.Color(0x10131b);
+
+
+    // ==========================================
+    // 3. CAMERA
+    // ==========================================
+
+    const camera = new THREE.PerspectiveCamera(
+        48,
+        stage.clientWidth / stage.clientHeight,
+        0.1,
+        100
+    );
+
+    camera.position.set(0, -9.5, 11);
+
+
+    // ==========================================
+    // 4. RENDERER
+    // ==========================================
+
+    const renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
+
+    renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio, 2)
+    );
+
+    renderer.setSize(
+        stage.clientWidth,
+        stage.clientHeight
+    );
+
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    renderer.shadowMap.enabled = true;
+
+    stage.appendChild(renderer.domElement);
+
+
+    // ==========================================
+    // 5. ORBIT CONTROLS
+    // ==========================================
+
+    const controls = new OrbitControls(
+        camera,
+        renderer.domElement
+    );
+
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+
+    controls.minDistance = 7;
+    controls.maxDistance = 24;
+
+    controls.target.set(0, 0, 0);
+
+
+    // ==========================================
+    // 6. LIGHTING
+    // ==========================================
+
+    scene.add(
+        new THREE.HemisphereLight(
+            0xffffff,
+            0x30384a,
+            2
+        )
+    );
+
+    const keyLight = new THREE.DirectionalLight(
+        0xffffff,
+        2.5
+    );
+
+    keyLight.position.set(5, -5, 10);
+
+    keyLight.castShadow = true;
+
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(
+        0x8abfff,
+        1.2
+    );
+
+    fillLight.position.set(-5, 5, 7);
+
+    scene.add(fillLight);
+
+
+    // ==========================================
+    // 7. BRACKET MATERIALS
+    // ==========================================
+
+    const plateMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8996a6,
+        metalness: 0.82,
+        roughness: 0.29
+    });
+
+    const ribMaterial = new THREE.MeshStandardMaterial({
+        color: 0x647386,
+        metalness: 0.80,
+        roughness: 0.34
+    });
+
+
+    // ==========================================
+    // 8. MOUNTING PLATE
+    // ==========================================
+
+    const plateShape = new THREE.Shape();
+
+    plateShape.moveTo(-3.2, -2);
+    plateShape.lineTo(3.2, -2);
+    plateShape.lineTo(3.2, 2);
+    plateShape.lineTo(-3.2, 2);
+    plateShape.closePath();
+
+    const holePositions = [
+        [-2.25, 1.15],
+        [2.25, 1.15],
+        [-2.25, -1.15],
+        [2.25, -1.15]
+    ];
+
+    holePositions.forEach(([x, y]) => {
+
+        const hole = new THREE.Path();
+
+        hole.absarc(
+            x,
+            y,
+            0.36,
+            0,
+            Math.PI * 2,
+            true
+        );
+
+        plateShape.holes.push(hole);
+
+    });
+
+    const plateGeometry = new THREE.ExtrudeGeometry(
+        plateShape,
+        {
+            depth: 0.28,
+            bevelEnabled: true,
+            bevelSegments: 3,
+            steps: 1,
+            bevelSize: 0.07,
+            bevelThickness: 0.06,
+            curveSegments: 32
+        }
+    );
+
+    plateGeometry.center();
+
+    const plate = new THREE.Mesh(
+        plateGeometry,
+        plateMaterial
+    );
+
+    plate.castShadow = true;
+    plate.receiveShadow = true;
+
+    scene.add(plate);
+
+
+    // ==========================================
+    // 9. REINFORCEMENT RIBS
+    // ==========================================
+
+    function addRib(x, y, length, width, angle = 0) {
+
+        const rib = new THREE.Mesh(
+            new THREE.BoxGeometry(
+                length,
+                width,
+                0.13
+            ),
+            ribMaterial
+        );
+
+        rib.position.set(x, y, 0.20);
+
+        rib.rotation.z = angle;
+
+        rib.castShadow = true;
+
+        scene.add(rib);
+    }
+
+    addRib(0, 0, 2.7, 0.28);
+    addRib(-0.7, 0, 1.6, 0.20, Math.PI / 2);
+    addRib(0.7, 0, 1.6, 0.20, Math.PI / 2);
+
+
+    // ==========================================
+    // 10. LABEL CREATION
+    // ==========================================
+
+    function createLabel(text) {
+
+        const canvas = document.createElement('canvas');
+
+        canvas.width = 256;
+        canvas.height = 128;
+
+        const context = canvas.getContext('2d');
+
+        context.fillStyle = '#111827';
+
+        context.beginPath();
+
+        context.roundRect(
+            25,
+            15,
+            206,
+            98,
+            20
+        );
+
+        context.fill();
+
+        context.strokeStyle = '#8bc9ff';
+        context.lineWidth = 5;
+
+        context.stroke();
+
+        context.fillStyle = '#ffffff';
+        context.font = 'bold 58px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+
+        context.fillText(text, 128, 65);
+
+        const texture = new THREE.CanvasTexture(canvas);
+
+        texture.colorSpace = THREE.SRGBColorSpace;
+
+        const material = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            depthTest: false
+        });
+
+        const sprite = new THREE.Sprite(material);
+
+        sprite.scale.set(0.75, 0.38, 1);
+
+        return sprite;
+    }
+
+
+    // ==========================================
+    // 11. MARKER CREATION
+    // ==========================================
+
+    holePositions.forEach(([x, y], index) => {
+
+        const positionName = positions[index];
+
+        const initialColor = colors[
+            positionStatuses[positionName]
+        ] ?? colors['Not verified'];
+
+        const markerMaterial = new THREE.MeshStandardMaterial({
+
+            color: initialColor,
+
+            emissive: initialColor,
+
+            emissiveIntensity: 0.3,
+
+            metalness: 0.25,
+
+            roughness: 0.3
+
+        });
+
+        const marker = new THREE.Mesh(
+            new THREE.TorusGeometry(
+                0.48,
+                0.075,
+                12,
+                48
+            ),
+            markerMaterial
+        );
+
+        marker.position.set(x, y, 0.23);
+
+        marker.userData.positionName = positionName;
+
+        scene.add(marker);
+
+        markerMeshes.push(marker);
+
+
+        // Centre point
+
+        const dot = new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.10,
+                20,
+                20
+            ),
+            new THREE.MeshBasicMaterial({
+                color: 0xffffff
+            })
+        );
+
+        dot.position.set(x, y, 0.24);
+
+        scene.add(dot);
+
+
+        // Position label
+
+        const label = createLabel(positionName);
+
+        label.position.set(
+            x,
+            y + 0.63,
+            0.45
+        );
+
+        scene.add(label);
+
+    });
+
+
+    // ==========================================
+    // 12. SPATIAL GRID
+    // ==========================================
+
+    const grid = new THREE.GridHelper(
+        14,
+        28,
+        0x39465a,
+        0x252e3d
+    );
+
+    grid.rotation.x = Math.PI / 2;
+
+    grid.position.z = -0.42;
+
+    scene.add(grid);
+
+
+    // ==========================================
+    // 13. UPDATE MARKER COLOURS
+    // ==========================================
+
+    function updateMarkerColors() {
+
+        markerMeshes.forEach(marker => {
+
+            const name = marker.userData.positionName;
+
+            const status = positionStatuses[name];
+
+            const color = colors[status] ??
+                colors['Not verified'];
+
+            marker.material.color.setHex(color);
+
+            marker.material.emissive.setHex(color);
+
+            marker.scale.setScalar(
+                marker === selectedMarker ? 1.2 : 1.0
+            );
+
+        });
+    }
+
+
+    // ==========================================
+    // 14. UPDATE SUMMARY
+    // ==========================================
+
+    function updateSummary() {
+
+        const verified = positions.filter(name => {
+
+            return positionStatuses[name] !== 'Not verified';
+
+        }).length;
+
+        summaryText.textContent =
+            `Verified: ${verified} / 4`;
+
+    }
+
+
+    // ==========================================
+    // 15. SELECT MARKER
+    // ==========================================
+
+    function selectPosition(marker) {
+
+        selectedMarker = marker;
+
+        const name = marker.userData.positionName;
+
+        selectedText.textContent =
+            `Selected: ${name}`;
+
+        statusText.textContent =
+            `Status: ${positionStatuses[name]}`;
+
+        updateMarkerColors();
+
+    }
+
+
+    // ==========================================
+    // 16. CLICK DETECTION
+    // ==========================================
+
+    const raycaster = new THREE.Raycaster();
+
+    const pointer = new THREE.Vector2();
+
+    let startX = 0;
+    let startY = 0;
+
+    renderer.domElement.addEventListener(
+        'pointerdown',
+        event => {
+
+            startX = event.clientX;
+            startY = event.clientY;
+
+        }
+    );
+
+    renderer.domElement.addEventListener(
+        'pointerup',
+        event => {
+
+            const movement = Math.hypot(
+                event.clientX - startX,
+                event.clientY - startY
+            );
+
+            if (movement > 6) return;
+
+            const rect =
+                renderer.domElement.getBoundingClientRect();
+
+            pointer.x =
+                ((event.clientX - rect.left) / rect.width) * 2 - 1;
+
+            pointer.y =
+                -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(pointer, camera);
+
+            const hits = raycaster.intersectObjects(
+                markerMeshes
+            );
+
+            if (hits.length > 0) {
+
+                selectPosition(hits[0].object);
+
+            }
+
+        }
+    );
+
+
+    // ==========================================
+    // 17. INITIAL DISPLAY
+    // ==========================================
+
+    updateMarkerColors();
+
+    updateSummary();
+
+
+    if (positions.length > 0) {
+
+        selectedText.textContent = 'Selected: None';
+
+        statusText.textContent =
+            'Status: Synchronized with Streamlit';
+
+    }
+
+
+    // ==========================================
+    // 18. RESIZE
+    // ==========================================
+
+    function resizeViewer() {
+
+        const width = stage.clientWidth;
+
+        const height = stage.clientHeight;
+
+        if (!width || !height) return;
+
+        camera.aspect = width / height;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(width, height);
+
+    }
+
+    window.addEventListener(
+        'resize',
+        resizeViewer
+    );
+
+
+    // ==========================================
+    // 19. ANIMATION
+    // ==========================================
+
+    function animate() {
+
+        requestAnimationFrame(animate);
+
+        controls.update();
+
+        renderer.render(scene, camera);
+
+    }
+
+    animate();
+
+
+} catch (error) {
+
+    console.error(
+        '3D Viewer Error:',
+        error
+    );
+
+    errorBox.style.display = 'block';
+
+    errorBox.textContent =
+        '3D viewer could not start:\n' +
+        error.message;
+
+}
+
+</script>
+
+</body>
+</html>

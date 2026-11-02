@@ -1,0 +1,12 @@
+streamlit==1.66.1
+anomalib==2.7.0
+torch==2.14.1
+torchvision==0.29.1
+numpy
+pandas
+matplotlib
+seaborn
+scikit-learn
+opencv-python-headless
+Pillow
+tqdm

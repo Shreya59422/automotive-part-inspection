@@ -1,0 +1,77 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local database
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+
+# Datasets and model weights
+dataset/
+ai_models/
+*.ckpt
+*.pth
+*.pt
+
+# Generated inspection outputs
+inspection_artifacts/*
+reports/*
+results/
+
+# Temporary files and logs
+*.tmp
+*.log
+installed_packages.txt
+
+# IDE and operating system files
+.vscode/a# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+.venv_test/
+.venv*/
+venv/
+env/
+
+# Local databases
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+
+# Datasets and model weights
+dataset/
+ai_models/
+*.ckpt
+*.pth
+*.pt
+
+# Generated inspection outputs
+inspection_artifacts/*
+reports/*
+results/
+
+# Temporary files and logs
+*.tmp
+*.log
+installed_packages.txt
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.idea/
+.DS_Store
+Thumbs.db
+
+patchcore_src/project_audit.txt
