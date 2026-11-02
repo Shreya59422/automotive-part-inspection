@@ -26,7 +26,6 @@ from backend.database import (
 
 st.set_page_config(
     page_title="Automotive Part Inspection System",
-    page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded",
 )
