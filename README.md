@@ -1,209 +1,104 @@
 # Automotive Part Inspection System
-### AI-Assisted Industrial Anomaly Detection, Visualization and Human Verification
+### Multi-Category Industrial Defect Detection and Localization Using CNN-Based PatchCore
 
-An AI-assisted industrial inspection application built with **Streamlit**, **PatchCore**, and **Anomalib**. It supports visual anomaly detection, anomaly localization, heatmap visualization, human verification, inspection history, and an interactive 3D inspection view.
+An AI-assisted industrial inspection application designed to identify potentially defective automotive components, localize anomalous regions, and support human verification through an interactive Streamlit dashboard.
 
-**Live application:** https://automotive-part-inspection-dashboard.streamlit.app  
-**GitHub repository:** https://github.com/Shreya59422/automotive-part-inspection  
-**Private model repository:** https://huggingface.co/Shreyyy7026/automotive-patchcore-model
+**Live Application:** https://automotive-part-inspection-dashboard.streamlit.app/
+
+**GitHub Repository:** https://github.com/Shreya59422/automotive-part-inspection
 
 ---
 
 ## 1. Project Overview
 
-Quality inspection is an important process in manufacturing. Manual inspection can be time-consuming and may lead to inconsistent identification of defective components.
+Traditional industrial quality inspection can be time-consuming and dependent on manual examination. This project explores an automated, vision-based inspection approach using deep learning and anomaly detection.
 
-The Automotive Part Inspection System is designed to assist visual inspection by identifying anomalous patterns in industrial component images. It combines automated anomaly detection with visual evidence and human verification.
+The system uses **PatchCore**, a memory-bank-based anomaly detection approach, to identify deviations from normal visual patterns. It generates anomaly scores and heatmaps to help operators understand potentially defective regions.
 
-### Objectives
-
-- Detect anomalous patterns in industrial component images.
-- Highlight potentially defective regions.
-- Generate anomaly heatmaps and image overlays.
-- Support human verification of AI-generated results.
-- Maintain inspection records and decision history.
-- Present inspection information through an interactive visualization interface.
-
----
+The application also includes human verification to support decisions in uncertain cases.
 
 ## 2. Key Features
 
-### Dashboard
-- Overview of inspection activities.
-- Summary of inspection records.
-- Inspection statistics and visual summaries.
+- **AI-Based Inspection:** Analyze uploaded industrial component images using the PatchCore model.
+- **Anomaly Detection:** Identify potentially abnormal visual patterns.
+- **Defect Localization:** Generate anomaly heatmaps highlighting suspicious regions.
+- **Visual Evidence:** Display image overlays to support inspection decisions.
+- **Human Verification:** Allow uncertain predictions to be reviewed manually.
+- **Inspection History:** View previously saved inspection records.
+- **Inspection Summary:** Track total inspections, accepted, rejected, and manual-review cases.
+- **Result Export:** Support exporting inspection records.
+- **Interactive Dashboard:** Navigate between inspection modules through a Streamlit interface.
 
-### AI Vision Inspection
-- Upload JPG, JPEG, and PNG images.
-- Run PatchCore anomaly detection.
-- Generate image-level anomaly scores.
-- Display anomaly heatmaps and overlays.
-- Present model prediction information.
-
-### Human Verification
-- Review AI-generated inspection results.
-- Manually verify component checkpoints P1–P4.
-- Record operator and part identification details.
-- Add inspection comments.
-- Record final inspection decisions.
-
-Verification statuses include:
-- Not Verified
-- Present
-- Missing
-- Needs Review
-
-### XR Inspection View
-- Display the original inspection image.
-- Visualize anomaly heatmaps and overlays.
-- Display an interactive 3D component model.
-- Present P1–P4 inspection checkpoint statuses.
-
-### Inspection History
-- Store inspection records using SQLite.
-- View previous inspection results.
-- Display inspection summaries and decision distributions.
-- Export inspection records as CSV.
-
----
-
-## 3. System Architecture
-
-```text
-                         USER
-                           |
-                           v
-                  STREAMLIT APPLICATION
-                           |
-             +-------------+-------------+
-             |                           |
-             v                           v
-        IMAGE UPLOAD                 DASHBOARD
-             |
-             v
-       IMAGE PROCESSING
-             |
-             v
-        PATCHCORE MODEL
-             |
-             v
-       ANOMALY DETECTION
-             |
-       +-----+------+
-       |            |
-       v            v
-  ANOMALY SCORE  ANOMALY MAP
-       |            |
-       +-----+------+
-             |
-             v
-        VISUALIZATION
-       (Heatmap / Overlay)
-             |
-             v
-      HUMAN VERIFICATION
-             |
-       +-----+------+
-       |            |
-       v            v
-  SQLITE DATABASE  XR VIEW
-       |           (3D MODEL)
-       v
- INSPECTION HISTORY
-       |
-       v
-    CSV EXPORT
-```
-
----
-
-## 4. Technologies Used
+## 3. Technology Stack
 
 | Category | Technologies |
 |---|---|
 | Programming Language | Python |
-| User Interface | Streamlit |
-| Anomaly Detection | PatchCore |
 | Deep Learning | PyTorch |
+| Anomaly Detection | PatchCore |
+| Computer Vision | OpenCV |
 | Model Framework | Anomalib |
-| Model Hosting | Hugging Face Hub |
-| Image Processing | OpenCV, Pillow |
-| Numerical Computing | NumPy |
-| Data Processing | Pandas |
-| Visualization | Plotly |
-| Database | SQLite |
-| 3D Visualization | GLB, HTML |
-| Development Environment | Visual Studio Code |
+| Data Processing | NumPy, Pandas |
+| Visualization | Matplotlib |
+| Web Application | Streamlit |
+| Model Hosting | Hugging Face |
 | Version Control | Git, GitHub |
 | Deployment | Streamlit Community Cloud |
+| Database | SQLite |
 
----
+## 4. System Architecture
 
-## 5. Anomaly Detection Methodology
+The application follows this general workflow:
 
-### PatchCore
+1. User uploads an industrial component image.
+2. The image is preprocessed.
+3. The PatchCore model analyzes visual features.
+4. An anomaly score is generated.
+5. An anomaly heatmap and visual overlay are produced.
+6. The system presents an inspection result.
+7. Uncertain cases can be sent for human verification.
+8. Inspection details are saved in the history.
 
-PatchCore is an industrial anomaly detection approach that identifies deviations from normal image patterns. It uses pretrained feature representations and a memory bank of normal image features to identify anomalous regions.
+## 5. Application Modules
 
-### Workflow
+| Module | Description |
+|---|---|
+| Dashboard | Provides an overview of inspection activities. |
+| AI Vision | Performs image-based anomaly inspection. |
+| Human Verification | Supports manual review of uncertain predictions. |
+| XR Inspection | Provides the XR inspection interface. |
+| Inspection History | Displays saved inspection records and summary statistics. |
 
-1. Load the trained PatchCore checkpoint.
-2. Upload an industrial component image.
-3. Process the image for model inference.
-4. Extract image features.
-5. Compare extracted features against the learned normal feature memory bank.
-6. Generate an anomaly score and anomaly map.
-7. Visualize potentially anomalous regions using heatmaps and overlays.
-8. Allow human verification of the prediction.
+## 6. Model Information
 
-### Dataset
+**Primary Model:** PatchCore
 
-The model was trained and evaluated using the **MVTec Anomaly Detection (MVTec AD) dataset**, specifically its **screw category**.
+PatchCore is an anomaly detection method that learns representative feature patterns from normal training images and identifies deviations during inference.
 
-The dataset provides normal training images and test images containing normal and anomalous samples.
+**Training Dataset:** MVTec Anomaly Detection (MVTec AD), screw category.
 
-> **Scope note:** The current model is based on the MVTec AD screw category. It has not been independently validated as an automotive-specific missing-component detection model.
+The model was trained using normal training images. Defective test images were not used for training.
 
----
+**Important:** The current model is trained on the MVTec AD screw category. Its performance on other automotive component categories requires separate dataset validation and testing.
 
-## 6. Model Evaluation
+Anomaly scores are not calibrated defect probabilities. Predictions should be interpreted alongside visual evidence and human verification.
 
-The following metrics were obtained during the model evaluation:
+## 7. Model Hosting
 
-| Evaluation Metric | Score |
-|---|---:|
-| Image AUROC | 1.0000 |
-| Image F1 Score | 0.9920 |
-| Pixel AUROC | 0.985593 |
-| Pixel F1 Score | 0.727074 |
+The trained checkpoint is hosted in a private Hugging Face repository.
 
-### Metric Interpretation
+**Model Repository:**  
+https://huggingface.co/Shreyyy7026/automotive-patchcore-model
 
-- **Image AUROC:** Measures the model's ability to distinguish normal and anomalous images.
-- **Image F1 Score:** Measures the balance between precision and recall at image level.
-- **Pixel AUROC:** Evaluates anomaly localization performance at pixel level.
-- **Pixel F1 Score:** Evaluates pixel-level precision and recall.
+The application retrieves the model checkpoint using a Hugging Face access token.
 
-These results represent the evaluated MVTec AD screw-category setup. They should not be interpreted as automotive production performance or automotive-specific validation results.
+Configure the following secret in Streamlit Community Cloud:
 
----
+```toml
+HF_TOKEN = "your_huggingface_read_token"
+```
 
-## 7. Human-in-the-Loop Verification
-
-Automated anomaly detection is an inspection aid, not an independent final authority.
-
-The human verification module allows operators to review AI-generated results and record their decisions. It supports:
-
-- Manual component verification.
-- P1–P4 checkpoint status updates.
-- Operator identification.
-- Part identification.
-- Inspection comments.
-- Final inspection decisions.
-
-Uncertain predictions should be reviewed by a human operator.
-
----
+Never upload access tokens or private credentials to GitHub.
 
 ## 8. Project Structure
 
@@ -211,6 +106,8 @@ Uncertain predictions should be reviewed by a human operator.
 automotive-part-inspection/
 │
 ├── app.py
+├── requirements.txt
+├── README.md
 │
 ├── backend/
 │   ├── __init__.py
@@ -219,248 +116,109 @@ automotive-part-inspection/
 │   ├── model_config.py
 │   └── patchcore_service.py
 │
-├── generated_models/
-│   └── brake_caliper.glb
-│
-├── patchcore_src/
-│   ├── README.md
-│   ├── MODEL_DOCUMENTATION.md
-│   └── requirements.txt
-│
-├── xr/
-│   └── bracket_viewer.html
-│
-├── requirements.txt
-├── .gitignore
-└── README.md
+└── .gitignore
 ```
 
-Datasets, model weights, virtual environments, generated inspection outputs, and local database files should not be committed to Git.
-
----
-
-## 9. Local Installation and Setup
+## 9. Installation and Local Setup
 
 ### Prerequisites
 
+- Python 3.12
 - Git
-- Python version compatible with the pinned project dependencies
 - Visual Studio Code (recommended)
-- Access to the trained PatchCore checkpoint
 
-### Step 1: Clone the repository
+### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/Shreya59422/automotive-part-inspection.git
+```
+
+### Step 2: Navigate to the Project
+
+```bash
 cd automotive-part-inspection
 ```
 
-### Step 2: Create a virtual environment
-
-On Windows PowerShell:
-
-```powershell
-py -3.13 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-If Python 3.13 is not installed, use an installed Python version supported by the project's dependencies.
-
-### Step 3: Install dependencies
+### Step 3: Create a Virtual Environment
 
 ```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m venv .venv
 ```
 
-For a CPU-only environment, install compatible CPU builds of PyTorch and Torchvision using the official PyTorch installation selector.
+### Step 4: Activate the Environment
 
-Check dependency consistency:
+**Windows PowerShell:**
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+### Step 5: Install Dependencies
 
 ```bash
-python -m pip check
+pip install -r requirements.txt
 ```
 
----
+### Step 6: Configure Hugging Face Access
 
-## 10. Model Checkpoint Configuration
+Set your Hugging Face read token securely as an environment variable or through the application's supported configuration.
 
-The trained checkpoint is approximately 261 MB and is **not stored in this GitHub repository**.
-
-The application supports two checkpoint sources:
-
-1. A local checkpoint for development.
-2. A private Hugging Face repository for deployment or environments without a local checkpoint.
-
-### Option A: Local checkpoint
-
-Place the checkpoint at:
-
-```text
-models/patchcore/model.ckpt
-```
-
-Alternatively, set the `PATCHCORE_CHECKPOINT` environment variable in PowerShell:
-
-```powershell
-$env:PATCHCORE_CHECKPOINT = "C:\path\to\model.ckpt"
-```
-
-Replace the example path with the actual checkpoint location.
-
-### Option B: Hugging Face Hub
-
-The deployed application downloads the checkpoint from the private Hugging Face repository when a local checkpoint is not available.
-
-Repository:
-
-```text
-Shreyyy7026/automotive-patchcore-model
-```
-
-Checkpoint filename:
-
-```text
-model.ckpt
-```
-
-The application uses `huggingface_hub` to download the checkpoint and cache it for subsequent use.
-
-For local development with the private repository, set the token in PowerShell:
-
-```powershell
-$env:HF_TOKEN = "your_hugging_face_read_token"
-```
-
-Do not commit the token to Git or place it directly in Python source files.
-
----
-
-## 11. Streamlit Community Cloud Deployment
-
-The application is deployed using Streamlit Community Cloud.
-
-### Step 1: Connect the GitHub repository
-
-1. Sign in to [Streamlit Community Cloud](https://share.streamlit.io/).
-2. Create or open the application.
-3. Select the GitHub repository `Shreya59422/automotive-part-inspection`.
-4. Select the `main` branch.
-5. Set the application entry point to `app.py`.
-6. Deploy the application.
-
-Live app:
-
-https://automotive-part-inspection-dashboard.streamlit.app
-
-### Step 2: Configure the Hugging Face secret
-
-The model repository is private, so the application needs a Hugging Face read token.
-
-1. Create a Hugging Face **Read** access token from:
-   https://huggingface.co/settings/tokens
-2. Open the application settings in Streamlit Community Cloud.
-3. Open **Secrets**.
-4. Add the following TOML entry, replacing the placeholder with the token:
-
-```toml
-HF_TOKEN = "your_hugging_face_read_token"
-```
-
-5. Save the secret.
-
-**Security:** Never commit the token to GitHub, include it in screenshots, or share it in public logs. If a token is exposed, revoke it and create a replacement.
-
-### Step 3: Deploy updates
-
-When code is pushed to the configured GitHub branch, Streamlit Community Cloud detects the changes and redeploys the application.
-
-Typical update commands:
-
-```powershell
-git add .
-git commit -m "Update application"
-git push origin main
-```
-
-Only stage files that should be committed. Do not add model checkpoints, tokens, virtual environments, datasets, or local database files.
-
-### Step 4: Verify deployment
-
-1. Wait for the deployment to complete.
-2. Open the live application.
-3. Navigate to **AI Vision**.
-4. Upload a supported inspection image.
-5. Run an inspection and review the output.
-6. If deployment or inference fails, inspect the application logs in Streamlit Community Cloud.
-
-The first inference may take longer because the checkpoint needs to be downloaded and cached.
-
----
-
-## 12. Running the Application Locally
-
-Start the application from the project root:
+### Step 7: Run the Application
 
 ```bash
-python -m streamlit run app.py
+streamlit run app.py
 ```
 
-Open:
+The application will open in your browser, usually at:
 
 ```text
 http://localhost:8501
 ```
 
-Upload an inspection image and use the available modules for inspection, visualization, human verification, and history management.
+## 10. Deployment
 
----
+The application is deployed using Streamlit Community Cloud.
 
-## 13. Limitations and Future Scope
+**Deployment Configuration**
 
-### Current Limitations
+- Repository: `Shreya59422/automotive-part-inspection`
+- Branch: `main`
+- Main file: `app.py`
+- Python version: `3.12`
+- Model hosting: Hugging Face
 
-- The current PatchCore model is based on the MVTec AD screw category.
-- Automotive-specific defect detection requires additional dataset collection and validation.
-- Anomaly scores indicate model responses and are not defect probabilities.
-- Anomaly heatmaps highlight relative anomaly responses and do not independently establish verified defect locations.
-- P1–P4 checkpoint statuses are manually verified.
-- The 3D component visualization is a schematic inspection aid, not an actual 3D reconstruction of the uploaded component.
-- Human review is necessary for uncertain inspection outcomes.
-- Streamlit Community Cloud local storage, including SQLite data, should not be assumed to be persistent across application restarts or redeployments.
+**Live Application:**  
+https://automotive-part-inspection-dashboard.streamlit.app/
 
-### Future Enhancements
+## 11. Performance Evaluation
 
-- Train and validate models using automotive-specific datasets.
-- Extend detection to multiple automotive component categories.
-- Improve anomaly localization and explainability.
+The PatchCore model was evaluated on the MVTec AD screw category.
+
+| Evaluation Metric | Score |
+|---|---:|
+| Image AUROC | 1.0000 |
+| Image F1-Score | 0.9920 |
+| Pixel AUROC | 0.985593 |
+| Pixel F1-Score | 0.727074 |
+
+These results describe the evaluated MVTec screw dataset and should not be interpreted as validated performance across all automotive components.
+
+## 12. Future Enhancements
+
+- Expand training and evaluation to multiple automotive component categories.
+- Improve anomaly localization and segmentation performance.
+- Introduce additional defect classification capabilities.
 - Integrate real-time camera-based inspection.
-- Introduce role-based operator access.
-- Enhance 3D visualization and component-level inspection.
-- Evaluate deployment on industrial inspection hardware.
-- Use persistent external storage for inspection records and uploaded artifacts.
+- Enhance explainability and evidence visualization.
+- Improve human-in-the-loop review workflows.
+- Add persistent cloud-based inspection storage.
+- Explore XR-assisted industrial inspection.
 
+## 13. Contributors
+
+**Shreya Reddy S**
+**Likitha M S**
+**Tejashwini S**
 ---
 
-## 14. Contributors
-
-This project was collaboratively developed by:
-
-1. **Shreya Reddy S**
-2. **Likitha M S**
-3. **Tejashwini M S**
-
----
-
-## 15. Acknowledgements
-
-We acknowledge the developers and researchers behind the MVTec AD dataset, PatchCore, PyTorch, Anomalib, Hugging Face Hub, and Streamlit for providing the resources and frameworks used in this project.
-
----
-
-**Project:** Automotive Part Inspection System  
-**Domain:** Artificial Intelligence | Computer Vision | Industrial Quality Inspection  
-**Primary Model:** PatchCore  
-**Application Framework:** Streamlit  
-**Model Hosting:** Hugging Face Hub  
-**Database:** SQLite
+*This project demonstrates the application of deep learning, computer vision, anomaly detection, and human-in-the-loop verification for industrial quality inspection.*
