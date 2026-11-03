@@ -216,8 +216,8 @@ These results describe the evaluated MVTec screw dataset and should not be inter
 
 ## 13. Contributors
 
-**Shreya Reddy S**
-**Likitha M S**
+**Shreya Reddy S**, 
+**Likitha M S**, 
 **Tejashwini S**
 ---
 
