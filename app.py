@@ -585,7 +585,7 @@ def render_bracket_3d(statuses):
 # 7. SIDEBAR NAVIGATION
 # ============================================================
 
-st.sidebar.title("🔍 Inspection System")
+st.sidebar.title(" Inspection System")
 st.sidebar.caption("Automotive Part Inspection")
 
 PAGES = [
